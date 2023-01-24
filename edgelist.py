@@ -1,3 +1,5 @@
+import cython
+
 class vertex:
     def __init__(self, point, halfEdge):
         self.point = point
