@@ -11,7 +11,7 @@ class Vertex:
         return self.x
     def getY(self):
         return self.y
-    def add_half_edge(self, half_edge):
+    def addHalfEdge(self, half_edge):
         self.half_edges.append(half_edge)
 
 class HalfEdge:
@@ -45,39 +45,75 @@ class DCEL:
         self.half_edges = []
         self.faces = []
 
-    def get_vertex(self, v):
-        '''Returns the vertex already stored in the DCEL vertices list'''
+    def getVertex(self, v):
+        '''Returns the vertex already stored in the DCEL vertices list, or 0 if it doesn't exit yet'''
         for vertex in self.vertices:
             if v == vertex:
                 return v
+        return 0
+    def getHalfEdges(self, p1, p2):
+        ''''Returns the two half edges that correspond to an edge between points p1 and p2''''
+        for half_edge in self.half_edges:
+            if half_edge.origin == p1 and half_edge.dual.origin == p2:
+                return [half_edge, half_edge.dual]
+        return 0
+                
     def create_DCEL(self, points, edge_list): #EDGE LIST IS LIST OF EDGES IN THE TRIANGULATION, POINTS IS EVERY POINT
         '''Takes points, and list of edges as arguments to fill in all of the DCEL info'''
         for point in points:# This loop Appends each point to the list of points in the DCEL
             self.vertices.append(point) 
         for edge in edge_list: #This loop creates the half_edges, gives them their appropriate dual and appends them to the half_edge DCEL list, as well as gives each vertex its appropriate half_edge as well
-            v1 = self.get_vertex(edge[0]) #Retrieves the ACTUAL vertices in the DCEL object
-            v2 = self.get_vertex(edge[1])
+            v1 = self.getVertex(edge[0]) #Retrieves the ACTUAL vertices in the DCEL object
+            v2 = self.getVertex(edge[1])
 
             h1 = HalfEdge(v1) #Creates half_edges with respective origin points and sets them as eachothers dual
             h2 = HalfEdge(v2)
             h1.setDual(h2)
             h2.setDual(h1)
 
-            v1.add_half_edge(h1) #Appends appropriate half_edge to the DCEL list of half_edges for these vertices
-            v2.add_half_edge(h2)
+            v1.addHalfEdge(h1) #Appends appropriate half_edge to the DCEL list of half_edges for these vertices
+            v2.addHalfEdge(h2)
 
             self.half_edges.append(h1)
             self.half_edges.append(h2)
+    
         
-        for v in self.vertices: #small print to show working
-            for e in v.half_edges:
-                print(e.origin.x) 
-        #NEED WAY TO FILL IN REST OF INFO, INCLUDING HALFEDGE NEXT/PREV VALUES, AND ALL THE FACE INFO
 
 def leftOf(a, b, c):
     signedArea = (b.getX() - a.getX())*(c.getY() - a.getY()) - (b.getY() - a.getY())*(c.getX() - a.getX())
     return signedArea > 0
-               
+
+def makeTriangle(points, DCEL): #Points is list of points, 3 points lon 
+    for point in points: #Appends points to DCEL vertice list if not already in the list
+        if(DCEL.get_vertex(point) == 0):
+            DCEL.vertices.append(point)
+    
+    #Creates list of potential edges to be added to DCEL
+    edge_list = [[points[0], points[1]], [points[1],points[2]], [points[2], points[0]]] 
+    for edge in edge_list:
+        v1 = DCEL.getVertex(edge[0])
+        v2 = DCEL.getVertex(edge[1])
+        
+        if DCEL.getHalfEdges(v1, v2 == 0): #NEW HALF_EDGES
+            h1 = HalfEdge(v1)
+            h2 = HalfEdge(v2)
+            h1.setDual(h2)
+            h2.setDual(v1)
+            DCEL.half_edges.append(h1)
+            DCEL.half_edges.append(h2)
+        else:                       #HALF_EDGES ALREADY IN LIST
+            edges = DCEL.getHalfEdges(v1, v2)
+            h1 = edges[0]
+            h2 = edges[1]
+        
+        v1.addHalfEdge(h1)
+        v2.addHalfEdge(h2)
+        #No way to check if half_edge already in half_edge list yet
+        
+        
+        
+    
+
 # random point generation
 def randPoints(numPoints, low, high):
     points = []
@@ -110,22 +146,53 @@ def sortByX(points):
             break
 
     return points
+
+
+def findList(firstPoint, secondPoint, vertexList):
+    visibleList = []
+
+    for i in range(firstPoint, secondPoint+1):
+        visibleList.append(vertexList[i])
+    
+    return visibleList
     
 
-def findVisible(p, edgeList):
+def findVisible(newPoint, vertexList):
     '''Returns all visible points to the left from given point, idk how to do this'''
+    firstPoint = 0
+    secondPoint = 1
+
+    for i in range(vertexList):
+        # find last left
+        if leftOf(vertexList[i], vertexList[i+1], newPoint):
+            firstPoint = i
+        # find last right
+        if not leftOf(vertexList[i], vertexList[i+1], newPoint):
+            secondPoint = i + 1
+            if leftOf(vertexList[i+1],vertexList[i+2],newPoint):
+                break
+    # append actual points and return list
+    return firstPoint, secondPoint
     
 
-def incrementalTriangulate(points):
+def incrementalTriangulate(points, DCEL):
     '''Given a list of sorted points, returns Double edge list of the incremental triangulation of the points'''
     points = sortByX(points)
-    vertex_list = [points[0], points[1], points[2]]
-    double_edge_list = [HalfEdge(points[0]), HalfEdge(points[1]), HalfEdge(points[2])]
-    
+    DCEL.makeTriangle(points, DCEL)
+    #vertex_list = [points[0], points[1], points[2]]
+    #double_edge_list = [HalfEdge(points[0]), HalfEdge(points[1]), HalfEdge(points[2])]
+    hull = [points[0], points[1], points[2]] #note: sort the hull from lowest counterclockwise
     for i in range(points):
-        visible_points = findVisible(i, )
-        for j in range(visible_points()):
-            points
+        leftmost, rightmost = findVisible(points[i], hull)
+        
+
+        for j in range(leftmost, rightmost):
+            newTriangle = [hull[j],points[i],hull[j+1]]
+            DCEL.makeTriangle(newTriangle, DCEL)
+
+        hull = hull[:leftmost] + points[i] + hull[rightmost:]
+        
+            
             
 pts = randPoints(10, -10, 10)
 
@@ -140,11 +207,13 @@ A = Vertex(1,1)
 B = Vertex(3,1)
 C = Vertex(2,3)
 
+
 edges_in_triangulation = [ #This would be all of the edges in the triangulation, have a funciton ahead of time to find these
     [A,B],
     [B,C],
     [C,A]
 ]
+abc = Face(edges_in_triangulation)
 pts = [A, B, C]
 
 DCEL_data = DCEL() #Creates Dcel object
