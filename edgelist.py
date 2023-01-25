@@ -80,18 +80,16 @@ def findVisible(p, edgeList):
 
 def incrementalTriangulate(points):
     '''Given a list of sorted points, returns Double edge list of the incremental triangulation of the points'''
+    points = sortByX(points)
     vertex_list = [points[0], points[1], points[2]]
     double_edge_list = [HalfEdge(points[0]), HalfEdge(points[1]), HalfEdge(points[2])]
     
     for i in range(points):
         visible_points = findVisible(i, )
         for j in range(visible_points()):
+            points
             
 pts = randPoints(10, -10, 10)
-pts = sortByX(pts)
-
-
-
 
 a = Vertex((1,2), 0)
 b = Vertex((3,2), 0)

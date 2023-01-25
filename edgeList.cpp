@@ -1,1 +1,11 @@
-#include <boost/python.hpp>
+class edgeList {
+
+    struct Vertex
+    {
+        
+    };
+
+
+};
+
+
