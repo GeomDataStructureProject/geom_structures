@@ -38,6 +38,42 @@ class Face:
         self.halfEdgeList = half_edge_list
 
 
+class DCEL:
+    '''Stores three arrays holding all of the vertices, halfedges, and faces'''
+    def __init__(self):
+        self.vertices = []
+        self.half_edges = []
+        self.faces = []
+
+    def get_vertex(self, v):
+        '''Returns the vertex already stored in the DCEL vertices list'''
+        for vertex in self.vertices:
+            if v == vertex:
+                return v
+    def create_DCEL(self, points, edge_list): #EDGE LIST IS LIST OF EDGES IN THE TRIANGULATION, POINTS IS EVERY POINT
+        '''Takes points, and list of edges as arguments to fill in all of the DCEL info'''
+        for point in points:# This loop Appends each point to the list of points in the DCEL
+            self.vertices.append(point) 
+        for edge in edge_list: #This loop creates the half_edges, gives them their appropriate dual and appends them to the half_edge DCEL list, as well as gives each vertex its appropriate half_edge as well
+            v1 = self.get_vertex(edge[0]) #Retrieves the ACTUAL vertices in the DCEL object
+            v2 = self.get_vertex(edge[1])
+
+            h1 = HalfEdge(v1) #Creates half_edges with respective origin points and sets them as eachothers dual
+            h2 = HalfEdge(v2)
+            h1.setDual(h2)
+            h2.setDual(h1)
+
+            v1.add_half_edge(h1) #Appends appropriate half_edge to the DCEL list of half_edges for these vertices
+            v2.add_half_edge(h2)
+
+            self.half_edges.append(h1)
+            self.half_edges.append(h2)
+        
+        for v in self.vertices: #small print to show working
+            for e in v.half_edges:
+                print(e.origin.x) 
+        #NEED WAY TO FILL IN REST OF INFO, INCLUDING HALFEDGE NEXT/PREV VALUES, AND ALL THE FACE INFO
+
 def leftOf(a, b, c):
     signedArea = (b.getX() - a.getX())*(c.getY() - a.getY()) - (b.getY() - a.getY())*(c.getX() - a.getX())
     return signedArea > 0
@@ -96,44 +132,6 @@ pts = randPoints(10, -10, 10)
 a = Vertex((1,2), 0)
 b = Vertex((3,2), 0)
 b.print()
-
-
-class DCEL:
-    '''Stores three arrays holding all of the vertices, halfedges, and faces'''
-    def __init__(self):
-        self.vertices = []
-        self.half_edges = []
-        self.faces = []
-
-    def get_vertex(self, v):
-        '''Returns the vertex already stored in the DCEL vertices list'''
-        for vertex in self.vertices:
-            if v == vertex:
-                return v
-    def create_DCEL(self, points, edge_list): #EDGE LIST IS LIST OF EDGES IN THE TRIANGULATION, POINTS IS EVERY POINT
-        '''Takes points, and list of edges as arguments to fill in all of the DCEL info'''
-        for point in points:# This loop Appends each point to the list of points in the DCEL
-            self.vertices.append(point) 
-        for edge in edge_list: #This loop creates the half_edges, gives them their appropriate dual and appends them to the half_edge DCEL list, as well as gives each vertex its appropriate half_edge as well
-            v1 = self.get_vertex(edge[0]) #Retrieves the ACTUAL vertices in the DCEL object
-            v2 = self.get_vertex(edge[1])
-
-            h1 = HalfEdge(v1) #Creates half_edges with respective origin points and sets them as eachothers dual
-            h2 = HalfEdge(v2)
-            h1.setDual(h2)
-            h2.setDual(h1)
-
-            v1.add_half_edge(h1) #Appends appropriate half_edge to the DCEL list of half_edges for these vertices
-            v2.add_half_edge(h2)
-
-            self.half_edges.append(h1)
-            self.half_edges.append(h2)
-        
-        for v in self.vertices: #small print to show working
-            for e in v.half_edges:
-                print(e.origin.x) 
-        #NEED WAY TO FILL IN REST OF INFO, INCLUDING HALFEDGE NEXT/PREV VALUES, AND ALL THE FACE INFO
-
 
 #pts = randPoints(10, -10, 10)
 #pts = sortByX(pts)                
