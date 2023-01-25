@@ -1,1 +1,11 @@
-#include 
+class edgeList {
+
+    struct Vertex
+    {
+        
+    };
+
+
+};
+
+
