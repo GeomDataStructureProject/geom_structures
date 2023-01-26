@@ -2,6 +2,8 @@
 #pylint: disable = line-too-long, too-many-lines, no-name-in-module, import-error, multiple-imports, pointless-string-statement, wrong-import-order, invalid-name, missing-function-docstring, missing-class-docstring, consider-using-enumerate
 import matplotlib.pyplot as plt
 import numpy as np
+import random
+import time
 
 class Vertex:
     '''Vertex class, stores an x, y value, and pointer list of adjacent halfedges'''
@@ -109,7 +111,7 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
             v1.addHalfEdge(h1)
             v2.addHalfEdge(h2)
     new_face = Face()
-    for i in range (0, 3):
+    for i in range (0, 3): #Loops through all the edgess, and sets next and prevs
         hedge = Dcel.getHalfEdge(edge_list[i%3][0], edge_list[(i+1)%3][1]) #Computes next, prev, halfedge
         nxt = Dcel.getHalfEdge(edge_list[(i+1)%3][0], edge_list[(i+2)%3][1])
         prev = Dcel.getHalfEdge(edge_list[(i-1)%3][0], edge_list[i%3][1])
@@ -134,7 +136,7 @@ def randPoints(numPoints, low, high):
     points = []
 
     for i in range(numPoints):
-        points.append(Vertex((random.randint(low, high), random.randint(low, high)), 0))
+        points.append(Vertex(random.uniform(low, high), random.uniform(low, high)))
 
     return points
     
@@ -146,12 +148,24 @@ def addToPlot(Dcel):
     for pt in points:
         x.append(pt.getX())
         y.append(pt.getY())
+        plt.scatter(pt.getX(), pt.getY(), s = 100)
 
     x = np.array(x)
     y = np.array(y)
     print(x)
     print(y)
-    plt.scatter(x, y)
+
+    for i in Dcel.half_edges:
+        dX = i.dual.origin.x - i.origin.x
+        dY = i.dual.origin.y - i.origin.y
+        shift_x = 0.01
+        shift_y = 0.01
+        # Changes which way is "left"
+        if dX <= 0:
+            shift_x = -0.01
+        elif dY <= 0:
+            shift_y = -0.01
+        plt.arrow(i.origin.x + shift_x, i.origin.y + shift_y, dX, dY, head_width=0.05, length_includes_head=True)
 
     # Add on last coordinate to the end
     #x = np.append(x, x[0]) # add X coordinate
@@ -191,49 +205,57 @@ def findVisible(newPoint, vertexList):
     firstPoint = 0
     secondPoint = 1
 
-    for i in range(len(vertexList) - 1):
+    for i in range(len(vertexList)):
         # find last left
         if leftOf(vertexList[i], vertexList[i+1], newPoint):
-            firstPoint = i + 1
+            firstPoint = i+1
+            print(firstPoint)
         # find last right
         if not leftOf(vertexList[i], vertexList[i+1], newPoint):
-            secondPoint = i + 1
-            if i + 2 > len(vertexList):
+            secondPoint = i+1
+            if i + 1 == len(vertexList):
                 if leftOf(vertexList[i+1],vertexList[1],newPoint):
                     break
             elif leftOf(vertexList[i+1],vertexList[i+2],newPoint):
                 break
     # append actual points and return list
+    print("returned from findVisible: ", firstPoint, secondPoint)
     return firstPoint, secondPoint
     
 
 def incrementalTriangulate(points, DCEL):
-    '''Given a list of sorted points, returns Double edge list of the incremental triangulation of the points'''
+    '''Calls makeTriangle with the correct triangles in the incremental triangulation'''
     points = sortByX(points)
-    makeTriangle(points, DCEL)
-    #vertex_list = [points[0], points[1], points[2]]
-    #double_edge_list = [HalfEdge(points[0]), HalfEdge(points[1]), HalfEdge(points[2])]
-    hull = [points[0], points[1], points[2]] 
-    #note: sort the hull from lowest counterclockwise
+    hull = [points[0], points[1], points[2]]
     if points[1].y > points[2].y:
         hull[1], hull[2] = hull[2], hull[1]
+    makeTriangle(hull, DCEL)
+    #vertex_list = [points[0], points[1], points[2]]
+    #double_edge_list = [HalfEdge(points[0]), HalfEdge(points[1]), HalfEdge(points[2])]
+    #hull = [points[0], points[1], points[2]] 
+
     hull.append(points[0])
         
     for i in range(3, len(points)):
+        #points = sortByX(points)
         leftmost, rightmost = findVisible(points[i], hull)
         for j in range(leftmost, rightmost):
             newTriangle = [hull[j],points[i],hull[j+1]]
             makeTriangle(newTriangle, DCEL)
+        addToPlot(DCEL)
+    
+
+
 
         # removes all points in between (not in hull)
+        print("i:", i, "leftmost:", leftmost, "rightmost:", rightmost)
         hull = hull[:leftmost] + [points[i]] + hull[rightmost:]
-        
+        print("hull:", hull)
             
             
-#pts = randPoints(10, -10, 10)
+#pts = randPoints(6, -10, 10)
 
-a = Vertex((1,2), 0)
-b = Vertex((3,2), 0)
+
 
 
 #pts = randPoints(10, -10, 10)
@@ -243,12 +265,12 @@ A = Vertex(1,1)
 B = Vertex(3,1)
 C = Vertex(2,3)
 D = Vertex(3,3)
-#E = Vertex()
-pts = [A, B, C, D]
+E = Vertex(4,4)
+pts = [A, B, C, D, E]
 
 DCEL_data = DCEL() #Creates Dcel object
 #makeTriangle(pts, DCEL_data)
-incrementalTriangulate(pts,DCEL_data)
-DCEL_data.show()
+incrementalTriangulate(pts, DCEL_data)
+#DCEL_data.show()
 
 addToPlot(DCEL_data)
