@@ -152,6 +152,7 @@ def addToPlot(Dcel):
 
     x = np.array(x)
     y = np.array(y)
+    print("list of vertices (unsorted): ")
     print(x)
     print(y)
 
@@ -209,7 +210,7 @@ def findVisible(newPoint, vertexList):
         # find last left
         if leftOf(vertexList[i], vertexList[i+1], newPoint):
             firstPoint = i+1
-            print(firstPoint)
+            #print(firstPoint)
         # find last right
         if not leftOf(vertexList[i], vertexList[i+1], newPoint):
             secondPoint = i+1
@@ -219,7 +220,7 @@ def findVisible(newPoint, vertexList):
             elif leftOf(vertexList[i+1],vertexList[i+2],newPoint):
                 break
     # append actual points and return list
-    print("returned from findVisible: ", firstPoint, secondPoint)
+    #print("returned from findVisible: ", firstPoint, secondPoint)
     return firstPoint, secondPoint
     
 
@@ -242,15 +243,15 @@ def incrementalTriangulate(points, DCEL):
         for j in range(leftmost, rightmost):
             newTriangle = [hull[j],points[i],hull[j+1]]
             makeTriangle(newTriangle, DCEL)
-        addToPlot(DCEL)
+        #addToPlot(DCEL)
     
 
 
 
         # removes all points in between (not in hull)
-        print("i:", i, "leftmost:", leftmost, "rightmost:", rightmost)
-        hull = hull[:leftmost] + [points[i]] + hull[rightmost:]
-        print("hull:", hull)
+        #print("i:", i, "leftmost:", leftmost, "rightmost:", rightmost)
+        hull = hull[:leftmost+1] + [points[i]] + hull[rightmost-1:]
+        #print("hull:", hull)
             
             
 #pts = randPoints(6, -10, 10)
