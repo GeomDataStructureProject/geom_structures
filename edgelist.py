@@ -1,5 +1,7 @@
 
 #pylint: disable = line-too-long, too-many-lines, no-name-in-module, import-error, multiple-imports, pointless-string-statement, wrong-import-order, invalid-name, missing-function-docstring, missing-class-docstring, consider-using-enumerate
+import matplotlib.pyplot as plt
+import numpy as np
 
 class Vertex:
     '''Vertex class, stores an x, y value, and pointer list of adjacent halfedges'''
@@ -47,7 +49,9 @@ class Face:
     def addHalfEdge(self, hedge):
         self.halfEdgeList.append(hedge)
     def print(self):
-        return 0
+        print("List of half edges:")
+        for i in range(len(self.halfEdgeList)):
+           self.halfEdgeList[i].print()
 
 
 class DCEL:
@@ -104,9 +108,9 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
             Dcel.half_edges.append(h2)
             v1.addHalfEdge(h1)
             v2.addHalfEdge(h2)
-    
-    for i in range (0, 2):
-        new_face = Face()
+    new_face = Face()
+    for i in range (0, 3):
+        
         hedge = Dcel.getHalfEdge(edge_list[i%3][0], edge_list[(i+1)%3][1]) #Computes next, prev, halfedge
         nxt = Dcel.getHalfEdge(edge_list[(i+1)%3][0], edge_list[(i+2)%3][1])
         prev = Dcel.getHalfEdge(edge_list[(i-1)%3][0], edge_list[i%3][1])
@@ -116,12 +120,12 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
         hedge.setFace(new_face)
 
         new_face.addHalfEdge(hedge) #Sets half edge to the corresponding face
+        
+    Dcel.faces.append(new_face)
 
         
     
-    # Face
-    f = Face(half_edge_list)
-    DCEL.faces.append(f)
+  
         
         
     
@@ -137,7 +141,12 @@ def randPoints(numPoints, low, high):
     
 # plotting points
 def addToPlot(points):
-    pointsXY = [*zip(*points)] # turns points into two lists, one for x and another for y
+    pointsXY = [(), ()]
+    for pt in points:
+        pointsXY[0].append(pt.getX)
+        pointsXY[1].append(pt.getY)
+
+    #pointsXY = [*zip(*points)] # turns points into two lists, one for x and another for y
     pointsXY = [np.array(pointsXY[0]), np.array(pointsXY[1])]
     plt.scatter(pointsXY[0], pointsXY[1])
 
@@ -204,8 +213,6 @@ def incrementalTriangulate(points, DCEL):
         
     for i in range(3, points):
         leftmost, rightmost = findVisible(points[i], hull)
-        
-
         for j in range(leftmost, rightmost):
             newTriangle = [hull[j],points[i],hull[j+1]]
             makeTriangle(newTriangle, DCEL)
@@ -232,4 +239,6 @@ pts = [A, B, C]
 DCEL_data = DCEL() #Creates Dcel object
 makeTriangle(pts, DCEL_data)
 
-#DCEL_data.show()
+DCEL_data.show()
+
+
