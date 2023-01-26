@@ -91,7 +91,6 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
         if(Dcel.getVertex(point) == 0):
             Dcel.vertices.append(point)
     #Creates list of potential edges to be added to DCEL
-<<<<<<< HEAD
     edge_list = [[points[0], points[1]], [points[1], points[2]], [points[2], points[0]]]
     for edge in edge_list:
         v1 = edge[0] #Points
@@ -117,40 +116,12 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
         hedge.setFace(new_face)
 
         new_face.addHalfEdge(hedge) #Sets half edge to the corresponding face
-=======
-    edge_list = [[points[0], points[1]], [points[1],points[2]], [points[2], points[0]]]
-    half_edge_list = []
-     
-    for edge in edge_list:
-        v1 = DCEL.getVertex(edge[0])
-        v2 = DCEL.getVertex(edge[1])
-
-        if half_edge_list in DCEL.half_edges:
-            
-        
-        if DCEL.getHalfEdges(v1, v2 == 0): #NEW HALF_EDGES
-            h1 = HalfEdge(v1)
-            h2 = HalfEdge(v2)
-            h1.setDual(h2)
-            h2.setDual(v1)
-            DCEL.half_edges.append(h1)
-            DCEL.half_edges.append(h2)
-            half_edge_list.append(h1)
-        else:                       #HALF_EDGES ALREADY IN LIST
-            edges = DCEL.getHalfEdges(v1, v2)
-            h1 = edges[0]
-            h2 = edges[1]
-            half_edge_list.append(h1)
-        
-        v1.addHalfEdge(h1)
-        v2.addHalfEdge(h2)
-        #No way to check if half_edge already in half_edge list yet
->>>>>>> 357fea8069f11ffa98b496fefe8037f4fe246cb5
+        DCEL.faces.append
 
         
     
     # Face
-    f = Face(half_edge_list)
+    f = Face(half)
     DCEL.faces.append(f)
         
         
