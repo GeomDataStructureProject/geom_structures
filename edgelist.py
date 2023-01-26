@@ -1,5 +1,7 @@
 
 #pylint: disable = line-too-long, too-many-lines, no-name-in-module, import-error, multiple-imports, pointless-string-statement, wrong-import-order, invalid-name, missing-function-docstring, missing-class-docstring, consider-using-enumerate
+import matplotlib.pyplot as plt
+import numpy as np
 
 class Vertex:
     '''Vertex class, stores an x, y value, and pointer list of adjacent halfedges'''
@@ -47,7 +49,9 @@ class Face:
     def addHalfEdge(self, hedge):
         self.halfEdgeList.append(hedge)
     def print(self):
-        return 0
+        print("List of half edges:")
+        for i in range(len(self.halfEdgeList)):
+           self.halfEdgeList[i].print()
 
 
 class DCEL:
@@ -104,9 +108,8 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
             Dcel.half_edges.append(h2)
             v1.addHalfEdge(h1)
             v2.addHalfEdge(h2)
-    
-    for i in range (0, 2):
-        new_face = Face()
+    new_face = Face()
+    for i in range (0, 3):
         hedge = Dcel.getHalfEdge(edge_list[i%3][0], edge_list[(i+1)%3][1]) #Computes next, prev, halfedge
         nxt = Dcel.getHalfEdge(edge_list[(i+1)%3][0], edge_list[(i+2)%3][1])
         prev = Dcel.getHalfEdge(edge_list[(i-1)%3][0], edge_list[i%3][1])
@@ -116,13 +119,12 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
         hedge.setFace(new_face)
 
         new_face.addHalfEdge(hedge) #Sets half edge to the corresponding face
-        DCEL.faces.append
+        
+    Dcel.faces.append(new_face)
 
         
     
-    # Face
-    f = Face(half)
-    DCEL.faces.append(f)
+  
         
         
     
@@ -137,22 +139,36 @@ def randPoints(numPoints, low, high):
     return points
     
 # plotting points
-def addToPlot(points):
-    pointsXY = [*zip(*points)] # turns points into two lists, one for x and another for y
-    pointsXY = [np.array(pointsXY[0]), np.array(pointsXY[1])]
-    plt.scatter(pointsXY[0], pointsXY[1])
+def addToPlot(Dcel):
+    points = Dcel.vertices
+    x = []
+    y = []
+    for pt in points:
+        x.append(pt.getX())
+        y.append(pt.getY())
+
+    x = np.array(x)
+    y = np.array(y)
+    print(x)
+    print(y)
+    plt.scatter(x, y)
 
     # Add on last coordinate to the end
-    pointsXY[0] = np.append(pointsXY[0], pointsXY[0][0]) # add X coordinate
-    pointsXY[1] = np.append(pointsXY[1], pointsXY[1][0]) # add Y coordinate
-    plt.plot(pointsXY[0], pointsXY[1])
+    #x = np.append(x, x[0]) # add X coordinate
+    #y = np.append(y, y[0]) # add Y coordinate
+    #plt.plot(x, y)
+    plt.show()
 
 def sortByX(points):
+    #x = []
+    #for pt in points:
+    #    x.append(pt.getX())
+
     swapped = False # used for deterining whether to exit loop permaturely
 
     for i in range(len(points) - 1):
         for j in range(len(points) - i - 1):
-            if points[j+1] < points[j]:
+            if points[j+1].x < points[j].x:
                 swapped = True
                 points[j], points[j+1] = points[j+1], points[j]
         if not swapped:
@@ -175,10 +191,10 @@ def findVisible(newPoint, vertexList):
     firstPoint = 0
     secondPoint = 1
 
-    for i in range(vertexList - 1):
+    for i in range(len(vertexList) - 1):
         # find last left
         if leftOf(vertexList[i], vertexList[i+1], newPoint):
-            firstPoint = i
+            firstPoint = i + 1
         # find last right
         if not leftOf(vertexList[i], vertexList[i+1], newPoint):
             secondPoint = i + 1
@@ -194,25 +210,23 @@ def findVisible(newPoint, vertexList):
 def incrementalTriangulate(points, DCEL):
     '''Given a list of sorted points, returns Double edge list of the incremental triangulation of the points'''
     points = sortByX(points)
-    DCEL.makeTriangle(points, DCEL)
+    makeTriangle(points, DCEL)
     #vertex_list = [points[0], points[1], points[2]]
     #double_edge_list = [HalfEdge(points[0]), HalfEdge(points[1]), HalfEdge(points[2])]
     hull = [points[0], points[1], points[2]] 
     #note: sort the hull from lowest counterclockwise
-    if points[1][1] > points[2][1]:
+    if points[1].y > points[2].y:
         hull[1], hull[2] = hull[2], hull[1]
     hull.append(points[0])
         
-    for i in range(3, points):
+    for i in range(3, len(points)):
         leftmost, rightmost = findVisible(points[i], hull)
-        
-
         for j in range(leftmost, rightmost):
             newTriangle = [hull[j],points[i],hull[j+1]]
             makeTriangle(newTriangle, DCEL)
 
         # removes all points in between (not in hull)
-        hull = hull[:leftmost] + points[i] + hull[rightmost:]
+        hull = hull[:leftmost] + [points[i]] + hull[rightmost:]
         
             
             
@@ -228,9 +242,13 @@ b = Vertex((3,2), 0)
 A = Vertex(1,1)
 B = Vertex(3,1)
 C = Vertex(2,3)
-pts = [A, B, C]
+D = Vertex(3,3)
+#E = Vertex()
+pts = [A, B, C, D]
 
 DCEL_data = DCEL() #Creates Dcel object
-makeTriangle(pts, DCEL_data)
+#makeTriangle(pts, DCEL_data)
+incrementalTriangulate(pts,DCEL_data)
+DCEL_data.show()
 
-#DCEL_data.show()
+addToPlot(DCEL_data)
