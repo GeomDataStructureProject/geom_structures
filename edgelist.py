@@ -91,6 +91,7 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
         if(Dcel.getVertex(point) == 0):
             Dcel.vertices.append(point)
     #Creates list of potential edges to be added to DCEL
+<<<<<<< HEAD
     edge_list = [[points[0], points[1]], [points[1], points[2]], [points[2], points[0]]]
     for edge in edge_list:
         v1 = edge[0] #Points
@@ -116,8 +117,41 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
         hedge.setFace(new_face)
 
         new_face.addHalfEdge(hedge) #Sets half edge to the corresponding face
+=======
+    edge_list = [[points[0], points[1]], [points[1],points[2]], [points[2], points[0]]]
+    half_edge_list = []
+     
+    for edge in edge_list:
+        v1 = DCEL.getVertex(edge[0])
+        v2 = DCEL.getVertex(edge[1])
+
+        if half_edge_list in DCEL.half_edges:
+            
+        
+        if DCEL.getHalfEdges(v1, v2 == 0): #NEW HALF_EDGES
+            h1 = HalfEdge(v1)
+            h2 = HalfEdge(v2)
+            h1.setDual(h2)
+            h2.setDual(v1)
+            DCEL.half_edges.append(h1)
+            DCEL.half_edges.append(h2)
+            half_edge_list.append(h1)
+        else:                       #HALF_EDGES ALREADY IN LIST
+            edges = DCEL.getHalfEdges(v1, v2)
+            h1 = edges[0]
+            h2 = edges[1]
+            half_edge_list.append(h1)
+        
+        v1.addHalfEdge(h1)
+        v2.addHalfEdge(h2)
+        #No way to check if half_edge already in half_edge list yet
+>>>>>>> 357fea8069f11ffa98b496fefe8037f4fe246cb5
 
         
+    
+    # Face
+    f = Face(half_edge_list)
+    DCEL.faces.append(f)
         
         
     
@@ -170,14 +204,17 @@ def findVisible(newPoint, vertexList):
     firstPoint = 0
     secondPoint = 1
 
-    for i in range(vertexList):
+    for i in range(vertexList - 1):
         # find last left
         if leftOf(vertexList[i], vertexList[i+1], newPoint):
             firstPoint = i
         # find last right
         if not leftOf(vertexList[i], vertexList[i+1], newPoint):
             secondPoint = i + 1
-            if leftOf(vertexList[i+1],vertexList[i+2],newPoint):
+            if i + 2 > len(vertexList):
+                if leftOf(vertexList[i+1],vertexList[1],newPoint):
+                    break
+            elif leftOf(vertexList[i+1],vertexList[i+2],newPoint):
                 break
     # append actual points and return list
     return firstPoint, secondPoint
@@ -189,15 +226,21 @@ def incrementalTriangulate(points, DCEL):
     DCEL.makeTriangle(points, DCEL)
     #vertex_list = [points[0], points[1], points[2]]
     #double_edge_list = [HalfEdge(points[0]), HalfEdge(points[1]), HalfEdge(points[2])]
-    hull = [points[0], points[1], points[2]] #note: sort the hull from lowest counterclockwise
-    for i in range(points):
+    hull = [points[0], points[1], points[2]] 
+    #note: sort the hull from lowest counterclockwise
+    if points[1][1] > points[2][1]:
+        hull[1], hull[2] = hull[2], hull[1]
+    hull.append(points[0])
+        
+    for i in range(3, points):
         leftmost, rightmost = findVisible(points[i], hull)
         
 
         for j in range(leftmost, rightmost):
             newTriangle = [hull[j],points[i],hull[j+1]]
-            DCEL.makeTriangle(newTriangle, DCEL)
+            makeTriangle(newTriangle, DCEL)
 
+        # removes all points in between (not in hull)
         hull = hull[:leftmost] + points[i] + hull[rightmost:]
         
             
