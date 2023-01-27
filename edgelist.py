@@ -124,10 +124,57 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
         
     Dcel.faces.append(new_face)
 
-        
-    
-  
-        
+def shiftHalfEdge(hedge, distance):
+    '''Returns new x and y for origin and tail given a hedge, and a distance by which to do so'''
+    x1 = hedge.origin.x
+    y1 = hedge.origin.y
+    x2 = hedge.dual.origin.x
+    y2 = hedge.dual.origin.y
+    r = ((x2-x1)**2 + (y2-y1)**2)**(.5)
+    xStar = (distance/r)*(y1-y2)
+    yStar = (distance/r)*(x2-x1)
+    x3 = x1 + xStar
+    y3 = y1 + yStar
+    x4 = x2 + xStar
+    y4 = y2 + yStar
+    new_coords = shortenHalfEdge(x3,y3,x4,y4, distance)
+    return [new_coords[0], new_coords[1],new_coords[2],new_coords[3]]
+def shortenHalfEdge(x1,y1,x2,y2, amount): #CALCULTES NEW X AND Y FOR TAIL AND ORIGIN USING SLOPE, SHIFTS BY AMOUNT
+    amount*=1.2
+    if x1 == x2: #SLOPE UNDEFINED
+        amount *= 3
+        if y1 < y2:
+            y3 = y1 + amount
+            y4 = y2 - amount
+        else:
+            y3 = y1 - amount
+            y4 = y2 + amount
+        return [x1,y3,x2,y4]
+    slope = (y2-y1)/(x2-x1)
+    offset = y2 - (slope*x2)
+
+    if x1 < x2: #Origin left of head
+        y3 = ((x1+amount)*slope + offset)
+        y4 = ((x2-amount)*slope + offset)
+    else:
+        y3 = ((x1-amount)*slope + offset)
+        y4 = ((x2+amount)*slope + offset)
+
+    if y1 == y2: #IF SLOPE IS 0
+        if x1 < x2:
+            x3 = x1 + amount
+            x4 = x2 - amount
+        else:
+            x3 = x1 - amount
+            x4 = x2 + amount
+    elif y1 < y2: #Origin below head
+        x3 = (((y1+amount)-offset)/slope) 
+        x4 = (((y2-amount)-offset)/slope) 
+    else:
+        x3 = (((y1-amount)-offset)/slope) 
+        x4 = (((y2+amount)-offset)/slope) 
+    return [x3,y3,x4,y4]
+            
         
     
 
@@ -145,28 +192,22 @@ def addToPlot(Dcel):
     points = Dcel.vertices
     x = []
     y = []
+    #plt.axis([0, 5, 0, 5])
     for pt in points:
         x.append(pt.getX())
         y.append(pt.getY())
         plt.scatter(pt.getX(), pt.getY(), s = 100)
+    
+    
+    for hedge in Dcel.half_edges: #TEM
+        new_coordinates = shiftHalfEdge(hedge, .015)
+        x1 = new_coordinates[0]
+        y1 = new_coordinates[1]
+        x2 = new_coordinates[2]
+        y2 = new_coordinates[3]
 
-    x = np.array(x)
-    y = np.array(y)
-    print("list of vertices (unsorted): ")
-    print(x)
-    print(y)
-
-    for i in Dcel.half_edges:
-        dX = i.dual.origin.x - i.origin.x
-        dY = i.dual.origin.y - i.origin.y
-        shift_x = 0.05
-        shift_y = 0.05
-        # Changes which way is "left"
-        if dX <= 0:
-            shift_x = -0.05
-        elif dY <= 0:
-            shift_y = -0.05
-        plt.arrow(i.origin.x + shift_x, i.origin.y + shift_y, dX, dY, head_width=0.1, length_includes_head=True)
+        plt.arrow(x1, y1, x2-x1, y2-y1, width = .005, head_width = .05, overhang = .95, color = 'black', shape = 'right', length_includes_head = True, )
+        
 
     # Add on last coordinate to the end
     #x = np.append(x, x[0]) # add X coordinate
@@ -190,6 +231,7 @@ def sortByX(points):
             break
 
     return points
+
 
 
 def findList(firstPoint, secondPoint, vertexList):
@@ -282,11 +324,16 @@ C = Vertex(2,3)
 D = Vertex(3,3)
 E = Vertex(4,4)
 F = Vertex(5,5)
-pts = [A, B, C, D, E, F]
+pts = [A, B, C]
 
 DCEL_data = DCEL() #Creates Dcel object
 #makeTriangle(pts, DCEL_data)
-incrementalTriangulate(pts, DCEL_data)
+makeTriangle([A,B,C], DCEL_data)
+makeTriangle([C,D,B], DCEL_data)
+makeTriangle([C,E,D], DCEL_data)
+makeTriangle([D,E,B], DCEL_data)
+
+#incrementalTriangulate(pts, DCEL_data)
 #DCEL_data.show()
 
 addToPlot(DCEL_data)
