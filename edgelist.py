@@ -1,6 +1,7 @@
 
 #pylint: disable = line-too-long, too-many-lines, no-name-in-module, import-error, multiple-imports, pointless-string-statement, wrong-import-order, invalid-name, missing-function-docstring, missing-class-docstring, consider-using-enumerate
 import matplotlib.pyplot as plt
+from matplotlib.backend_bases import MouseButton
 import numpy as np
 import random
 import time
@@ -113,8 +114,8 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
     new_face = Face()
     for i in range (0, 3): #Loops through all the edgess, and sets next and prevs
         hedge = Dcel.getHalfEdge(edge_list[i%3][0], edge_list[(i+1)%3][1]) #Computes next, prev, halfedge
-        nxt = Dcel.getHalfEdge(edge_list[(i+1)%3][0], edge_list[(i+2)%3][1])
-        prev = Dcel.getHalfEdge(edge_list[(i-1)%3][0], edge_list[i%3][1])
+        prev = Dcel.getHalfEdge(edge_list[(i+1)%3][0], edge_list[(i+2)%3][1])
+        nxt = Dcel.getHalfEdge(edge_list[(i-1)%3][0], edge_list[i%3][1])
 
         hedge.setNext(nxt) #Sets next, prev, and face values
         hedge.setPrev(prev)
@@ -124,22 +125,23 @@ def makeTriangle(points, Dcel): #Points is list of points, 3 points lon
         
     Dcel.faces.append(new_face)
 
-def shiftHalfEdge(hedge, distance):
+def parallelShortenShiftEdge(hedge, shift, shorten):
     '''Returns new x and y for origin and tail given a hedge, and a distance by which to do so'''
     x1 = hedge.origin.x
     y1 = hedge.origin.y
     x2 = hedge.dual.origin.x
     y2 = hedge.dual.origin.y
     r = ((x2-x1)**2 + (y2-y1)**2)**(.5)
-    xStar = (distance/r)*(y1-y2)
-    yStar = (distance/r)*(x2-x1)
+    r*=-1
+    xStar = (shift/r)*(y1-y2)
+    yStar = (shift/r)*(x2-x1)
     x3 = x1 + xStar
     y3 = y1 + yStar
     x4 = x2 + xStar
     y4 = y2 + yStar
-    new_coords = shortenHalfEdge(x3,y3,x4,y4, distance)
-    return [new_coords[0], new_coords[1],new_coords[2],new_coords[3]]
-def shortenHalfEdge(x1,y1,x2,y2, amount): #CALCULTES NEW X AND Y FOR TAIL AND ORIGIN USING SLOPE, SHIFTS BY AMOUNT
+    new_coordinates = shortenEdge(x3,y3,x4,y4, shorten) #Shortens to avoid overlap
+    return [new_coordinates[0],new_coordinates[1],new_coordinates[2],new_coordinates[3]]
+def shortenEdge(x1,y1,x2,y2, amount): #CALCULTES NEW X AND Y FOR TAIL AND ORIGIN USING SLOPE, SHIFTS BY AMOUNT
     amount*=1.2
     if x1 == x2: #SLOPE UNDEFINED
         amount *= 3
@@ -196,24 +198,45 @@ def addToPlot(Dcel):
     for pt in points:
         x.append(pt.getX())
         y.append(pt.getY())
-        plt.scatter(pt.getX(), pt.getY(), s = 100)
+        plt.scatter(pt.getX(), pt.getY(), s = 50)
     
-    
+
+
     for hedge in Dcel.half_edges: #TEM
-        new_coordinates = shiftHalfEdge(hedge, .015)
+        new_coordinates = parallelShortenShiftEdge(hedge, .01, .03) #Shifts hedge parallel by second arg, shortens by third arg
+        
         x1 = new_coordinates[0]
         y1 = new_coordinates[1]
         x2 = new_coordinates[2]
         y2 = new_coordinates[3]
 
-        plt.arrow(x1, y1, x2-x1, y2-y1, width = .005, head_width = .05, overhang = .95, color = 'black', shape = 'right', length_includes_head = True, )
+
+        plt.arrow(x1, y1, x2-x1, y2-y1, width = .004, head_width = .03, overhang = .5, color = 'black', shape = 'left', length_includes_head = True, )
         
 
     # Add on last coordinate to the end
     #x = np.append(x, x[0]) # add X coordinate
     #y = np.append(y, y[0]) # add Y coordinate
     #plt.plot(x, y)
+
+    
+    def on_click(event):
+        
+        if event.button is MouseButton.LEFT:
+            new_coordinates = parallelShortenShiftEdge(Dcel.faces[1].halfEdgeList[0].next, .01, .03) #Shifts hedge parallel by second arg, shortens by third arg
+        
+            x1 = new_coordinates[0]
+            y1 = new_coordinates[1]
+            x2 = new_coordinates[2]
+            y2 = new_coordinates[3]
+
+
+            plt.arrow(x1, y1, x2-x1, y2-y1, width = .004, head_width = .03, overhang = .5, color = 'red', shape = 'left', length_includes_head = True, )
+            plt.show()
+
+    plt.connect('button_press_event', on_click)
     plt.show()
+    
 
 def sortByX(points):
     #x = []
@@ -329,11 +352,13 @@ pts = [A, B, C]
 DCEL_data = DCEL() #Creates Dcel object
 #makeTriangle(pts, DCEL_data)
 makeTriangle([A,B,C], DCEL_data)
-makeTriangle([C,D,B], DCEL_data)
-makeTriangle([C,E,D], DCEL_data)
-makeTriangle([D,E,B], DCEL_data)
+makeTriangle([B,D,C], DCEL_data)
+#makeTriangle([D,E,C], DCEL_data)
+#makeTriangle([B,E,D], DCEL_data)
 
 #incrementalTriangulate(pts, DCEL_data)
 #DCEL_data.show()
 
 addToPlot(DCEL_data)
+
+
