@@ -220,18 +220,22 @@ def addToPlot(Dcel):
     #y = np.append(y, y[0]) # add Y coordinate
     #plt.plot(x, y)
 
+
     
     def on_click(event):
         
         if event.button is MouseButton.LEFT:
-            new_coordinates = parallelShortenShiftEdge(Dcel.faces[1].halfEdgeList[0].next, .01, .03) #Shifts hedge parallel by second arg, shortens by third arg
-        
+            global counter
+            
+            counter_local = counter
+            new_coordinates = parallelShortenShiftEdge(Dcel.faces[counter_local//3].halfEdgeList[(-counter)%3], .01, .03) #Shifts hedge parallel by second arg, shortens by third arg
+            
             x1 = new_coordinates[0]
             y1 = new_coordinates[1]
             x2 = new_coordinates[2]
             y2 = new_coordinates[3]
-
-
+            
+            counter += 1
             plt.arrow(x1, y1, x2-x1, y2-y1, width = .004, head_width = .03, overhang = .5, color = 'red', shape = 'left', length_includes_head = True, )
             plt.show()
 
@@ -349,13 +353,13 @@ D = Vertex(3,3)
 E = Vertex(4,4)
 F = Vertex(5,5)
 pts = [A, B, C]
-
+counter = 0
 DCEL_data = DCEL() #Creates Dcel object
 #makeTriangle(pts, DCEL_data)
 makeTriangle([A,B,C], DCEL_data)
 makeTriangle([B,D,C], DCEL_data)
-#makeTriangle([D,E,C], DCEL_data)
-#makeTriangle([B,E,D], DCEL_data)
+makeTriangle([D,E,C], DCEL_data)
+makeTriangle([B,E,D], DCEL_data)
 
 #incrementalTriangulate(pts, DCEL_data)
 #DCEL_data.show()
