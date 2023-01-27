@@ -332,12 +332,9 @@ def incrementalTriangulate(points, DCEL):
             print("[", i, "],")
         print("end of hull")
             
-            
+fig, ax = plt.subplots()
+
 #pts = randPoints(6, -10, 10)
-
-
-
-
 #pts = randPoints(10, -5, 5)
 #pts = sortByX(pts)                
 
