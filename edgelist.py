@@ -22,7 +22,8 @@ class Vertex:
         print("Point:", self.x, ',', self.y, 'has', len(self.half_edges), "half edges")
 
 class HalfEdge:
-    '''halfEdge class, stores pointers to: adjacent face, its dual, next and previous half edge, and its origin point '''
+    '''halfEdge class, stores pointers to: adjacent face, 
+    its dual, next and previous half edge, and its origin point '''
     def __init__(self, origin_point):
         self.face = 0
         self.dual = 0
@@ -333,6 +334,9 @@ def incrementalTriangulate(points, DCEL):
         print("end of hull")
             
 fig, ax = plt.subplots()
+
+#ani = animation.FuncAnimation(fig, animate, np.arange(1, 200), init_func=init,
+#                              interval=25, blit=True)
 
 #pts = randPoints(6, -10, 10)
 #pts = randPoints(10, -5, 5)
