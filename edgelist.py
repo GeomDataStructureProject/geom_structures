@@ -159,14 +159,14 @@ def addToPlot(Dcel):
     for i in Dcel.half_edges:
         dX = i.dual.origin.x - i.origin.x
         dY = i.dual.origin.y - i.origin.y
-        shift_x = 0.01
-        shift_y = 0.01
+        shift_x = 0.05
+        shift_y = 0.05
         # Changes which way is "left"
         if dX <= 0:
-            shift_x = -0.01
+            shift_x = -0.05
         elif dY <= 0:
-            shift_y = -0.01
-        plt.arrow(i.origin.x + shift_x, i.origin.y + shift_y, dX, dY, head_width=0.05, length_includes_head=True)
+            shift_y = -0.05
+        plt.arrow(i.origin.x + shift_x, i.origin.y + shift_y, dX, dY, head_width=0.1, length_includes_head=True)
 
     # Add on last coordinate to the end
     #x = np.append(x, x[0]) # add X coordinate
@@ -206,19 +206,28 @@ def findVisible(newPoint, vertexList):
     firstPoint = 0
     secondPoint = 1
 
+    #firstSpotted = False
+
     for i in range(len(vertexList)):
         # find last left
-        if leftOf(vertexList[i], vertexList[i+1], newPoint):
+        if leftOf(vertexList[i], vertexList[(i+1) % len(vertexList)], newPoint):
+            #if not firstSpotted:
             firstPoint = i+1
+            #    firstSpotted = True
             #print(firstPoint)
         # find last right
-        if not leftOf(vertexList[i], vertexList[i+1], newPoint):
-            secondPoint = i+1
-            if i + 1 == len(vertexList):
-                if leftOf(vertexList[i+1],vertexList[1],newPoint):
-                    break
-            elif leftOf(vertexList[i+1],vertexList[i+2],newPoint):
+        if not leftOf(vertexList[i], vertexList[(i+1) % len(vertexList)], newPoint):
+            secondPoint = i
+           # if i + 1 == len(vertexList):
+            #    if leftOf(vertexList[i+1 % len(vertexList)],vertexList[1],newPoint):
+             #       break
+            if leftOf(vertexList[(i+1) % len(vertexList)], vertexList[(i+2) % len(vertexList)], newPoint):
                 break
+            
+    print("Visible points:")
+    list = findList(firstPoint, secondPoint, vertexList)
+    for i in list:
+        i.print()
     # append actual points and return list
     #print("returned from findVisible: ", firstPoint, secondPoint)
     return firstPoint, secondPoint
@@ -228,7 +237,7 @@ def incrementalTriangulate(points, DCEL):
     '''Calls makeTriangle with the correct triangles in the incremental triangulation'''
     points = sortByX(points)
     hull = [points[0], points[1], points[2]]
-    if points[1].y > points[2].y:
+    if not leftOf(hull[0],hull[1],hull[2]):
         hull[1], hull[2] = hull[2], hull[1]
     makeTriangle(hull, DCEL)
     #vertex_list = [points[0], points[1], points[2]]
@@ -240,18 +249,23 @@ def incrementalTriangulate(points, DCEL):
     for i in range(3, len(points)):
         #points = sortByX(points)
         leftmost, rightmost = findVisible(points[i], hull)
-        for j in range(leftmost, rightmost):
-            newTriangle = [hull[j],points[i],hull[j+1]]
+        print(leftmost, rightmost)
+        for j in range(leftmost, rightmost+1):
+            newTriangle = [hull[j], points[i], hull[(j+1) % len(hull)]]
             makeTriangle(newTriangle, DCEL)
-        #addToPlot(DCEL)
+        addToPlot(DCEL)
     
 
 
 
         # removes all points in between (not in hull)
         #print("i:", i, "leftmost:", leftmost, "rightmost:", rightmost)
-        hull = hull[:leftmost+1] + [points[i]] + hull[rightmost-1:]
-        #print("hull:", hull)
+        hull = hull[:leftmost+1] + [points[i]] + hull[rightmost:]
+        print("hull:",)
+        for i in range(len(hull)):
+            hull[i].print()
+            print("[", i, "],")
+        print("end of hull")
             
             
 #pts = randPoints(6, -10, 10)
@@ -259,7 +273,7 @@ def incrementalTriangulate(points, DCEL):
 
 
 
-#pts = randPoints(10, -10, 10)
+#pts = randPoints(10, -5, 5)
 #pts = sortByX(pts)                
 
 A = Vertex(1,1)
@@ -267,7 +281,8 @@ B = Vertex(3,1)
 C = Vertex(2,3)
 D = Vertex(3,3)
 E = Vertex(4,4)
-pts = [A, B, C, D, E]
+F = Vertex(5,5)
+pts = [A, B, C, D, E, F]
 
 DCEL_data = DCEL() #Creates Dcel object
 #makeTriangle(pts, DCEL_data)
