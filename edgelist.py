@@ -321,9 +321,6 @@ def incrementalTriangulate(points, DCEL):
             makeTriangle(newTriangle, DCEL)
         addToPlot(DCEL)
     
-
-
-
         # removes all points in between (not in hull)
         #print("i:", i, "leftmost:", leftmost, "rightmost:", rightmost)
         hull = hull[:leftmost+1] + [points[i]] + hull[rightmost:]
